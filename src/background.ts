@@ -4,48 +4,155 @@ import { categorizeError, isError, TypedError } from './lib/utils';
 console.log('[service_worker] Background script loaded');
 
 async function requestTranslation(
-  imageDataUrl: string,
+  imageBytes: number[],
   fromLang: string = 'auto'
 ): Promise<TranslationResult> {
   try {
     const maxRetries = 2;
     let retryCount = 0;
     
+    // Get stored API keys
+    const settings = await browser.storage.sync.get(['ocrKey', 'deeplKey', 'targetLanguage']);
+    const ocrKey = settings.ocrKey;
+    const deeplKey = settings.deeplKey;
+
+    if (!ocrKey || !deeplKey) {
+      throw new TypedError(
+        'TranslationError',
+        'Please set your OCR.space and DeepL API keys in the extension popup'
+      );
+    }
+
     while (retryCount <= maxRetries) {
       try {
         const storedPreference = await browser.storage.sync.get('targetLanguage');
         const toLang =
           storedPreference.targetLanguage &&
           typeof storedPreference.targetLanguage === 'string'
-            ? storedPreference.targetLanguage
-            : 'indonesia';
-    
-        const base64Image = imageDataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
-        const response = await fetch(
-          `https://translate.apir.live/api/translate?from=${fromLang}&to=${toLang}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64Image }),
-          }
-        );
-    
-        if (!response.ok) {
-          throw new TypedError(
-            'FetchError',
-            `HTTP error! Status: ${response.status}`
-          );
-        }
-    
-        const result: TranslationResult = await response.json();
-        if (!result.originalText || !result.translatedText) {
+            ? storedPreference.targetLanguage.toLowerCase()
+            : 'id';
+
+        // Step 1: Create blob and check size
+        const blob = new Blob([new Uint8Array(imageBytes)], { type: 'image/png' });
+        
+        // Check if image size is greater than 1MB
+        if (blob.size > 1024 * 1024) {
           throw new TypedError(
             'TranslationError',
-            'No text detected in the image or translation failed'
+            'Image size must be less than 1MB. Please select a smaller area.'
           );
         }
-    
-        return result;
+
+        // Step 2: Extract text using OCR.space
+        const formData = new FormData();
+        formData.append('file', blob, 'image.png');
+        formData.append('language', 'auto');
+        formData.append('isOverlayRequired', 'false');
+        formData.append('OCREngine', '2');
+        formData.append('scale', 'true');
+        formData.append('detectOrientation', 'true');
+
+        const ocrResponse = await fetch('https://api.ocr.space/parse/image', {
+          method: 'POST',
+          headers: {
+            apikey: ocrKey as string
+          },
+          body: formData
+        });
+
+        if (!ocrResponse.ok) {
+          console.error('OCR Error Response:', await ocrResponse.text());
+          throw new TypedError(
+            'FetchError',
+            `OCR HTTP error! Status: ${ocrResponse.status}`
+          );
+        }
+
+        const ocrResult = await ocrResponse.json();
+        
+        // Check for OCR-specific errors
+        if (ocrResult.IsErroredOnProcessing) {
+          console.error('OCR Processing Error:', ocrResult.ErrorMessage);
+          throw new TypedError(
+            'TranslationError',
+            `OCR Error: ${ocrResult.ErrorMessage || 'Failed to process image'}`
+          );
+        }
+
+        // No text found case with helpful suggestions
+        if (!ocrResult.ParsedResults?.[0]?.ParsedText) {
+          throw new TypedError(
+            'TranslationError',
+            'No text detected in the image. Try: \n' +
+            '• Selecting a larger area around the text\n' +
+            '• Ensuring the text is clear and not blurry\n' +
+            '• Checking if the text is properly visible on screen'
+          );
+        }
+
+        const extractedText = ocrResult.ParsedResults[0].ParsedText.trim();
+        if (extractedText.length < 2) {
+          throw new TypedError(
+            'TranslationError',
+            'Text is too short or unclear. Try selecting a larger area with more complete text.'
+          );
+        }
+
+        // Clean up OCR text - handle vertical text and remove unnecessary line breaks
+        const cleanText = extractedText
+          // Split into lines
+          .split(/\r?\n/)
+          // Remove empty lines and trim each line
+          .map((line: string) => line.trim())
+          .filter((line: string) => line.length > 0)
+          // Join with space, preserving intentional paragraph breaks (double newlines)
+          .reduce((acc: string, line: string, i: number, arr: string[]) => {
+            // Check if this line ends with punctuation or is followed by a capital letter
+            const endsWithPunctuation = /[.!?。！？]$/.test(line);
+            const nextLineStartsWithCaps = i < arr.length - 1 && /^[A-Z\u00C0-\u00DC]/.test(arr[i + 1]);
+            
+            // If it's a real sentence break, add two spaces
+            if (endsWithPunctuation && nextLineStartsWithCaps) {
+              return acc + line + '  ';
+            }
+            // Otherwise just add a single space
+            return acc + line + ' ';
+          }, '')
+          .trim();
+
+        // Step 2: Translate using DeepL API
+        const deeplResponse = await fetch('https://api-free.deepl.com/v2/translate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `DeepL-Auth-Key ${deeplKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: [cleanText],
+            target_lang: toLang, // Now matches DeepL's expected format exactly
+            source_lang: fromLang === 'auto' ? null : fromLang,
+          }),
+        });
+
+        if (!deeplResponse.ok) {
+          throw new TypedError(
+            'FetchError',
+            `Translation HTTP error! Status: ${deeplResponse.status}`
+          );
+        }
+
+        const deeplResult = await deeplResponse.json();
+        if (!deeplResult.translations?.[0]?.text) {
+          throw new TypedError(
+            'TranslationError',
+            'Translation failed'
+          );
+        }
+
+        return {
+          originalText: extractedText,
+          translatedText: deeplResult.translations[0].text,
+        };
       } catch (error) {
         if (
           error instanceof TypedError && 
@@ -125,7 +232,7 @@ async function injectContentScript(tabId: number): Promise<void> {
     throw error;
   }
 }
-
+ 
 async function handleTranslation(): Promise<boolean> {
   try {
     const [tab] = await browser.tabs.query({
@@ -155,7 +262,7 @@ async function handleTranslation(): Promise<boolean> {
       },
     } as Message);
 
-    if (isError(selectionResult) || typeof selectionResult !== 'string') {
+    if (isError(selectionResult) || !Array.isArray(selectionResult)) {
       throw selectionResult;
     }
 

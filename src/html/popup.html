@@ -8,47 +8,59 @@
   <body>
     <main>
       <h3>Select and Translate</h3>
+      
+      <!-- API Keys Section -->
+      <div class="api-keys-section">
+        <div class="api-key-input">
+          <label for="ocr-key">OCR.space API Key:</label>
+          <div class="input-wrapper">
+            <input type="password" id="ocr-key" placeholder="Enter OCR.space API key" />
+            <button class="visibility-toggle" data-for="ocr-key">👁️</button>
+          </div>
+        </div>
+        <div class="api-key-input">
+          <label for="deepl-key">DeepL API Key:</label>
+          <div class="input-wrapper">
+            <input type="password" id="deepl-key" placeholder="Enter DeepL API key" />
+            <button class="visibility-toggle" data-for="deepl-key">👁️</button>
+          </div>
+        </div>
+      </div>
+
       <div class="language-selector">
         <label for="lang">Target language:</label>
         <select name="select" id="lang">
-          <option value="Indonesia" selected>Indonesia (id)</option>
-          <option value="Arabic">Arabic (ar)</option>
-          <option value="Bengali">Bengali (bn)</option>
-          <option value="Bulgarian">Bulgarian (bg)</option>
-          <option value="Chinese">Chinese (zh)</option>
-          <option value="Croatian">Croatian (hr)</option>
-          <option value="Czech">Czech (cs)</option>
-          <option value="Danish">Danish (da)</option>
-          <option value="Dutch">Dutch (nl)</option>
-          <option value="English">English (en)</option>
-          <option value="Estonian">Estonian (et)</option>
-          <option value="Finnish">Finnish (fi)</option>
-          <option value="French">French (fr)</option>
-          <option value="German">German (de)</option>
-          <option value="Greek">Greek (el)</option>
-          <option value="Hebrew">Hebrew (he)</option>
-          <option value="Hindi">Hindi (hi)</option>
-          <option value="Hungarian">Hungarian (hu)</option>
-          <option value="Italian">Italian (it)</option>
-          <option value="Japanese">Japanese (ja)</option>
-          <option value="Korean">Korean (ko)</option>
-          <option value="Latvian">Latvian (lv)</option>
-          <option value="Lithuanian">Lithuanian (lt)</option>
-          <option value="Norwegian">Norwegian (no)</option>
-          <option value="Polish">Polish (pl)</option>
-          <option value="Portuguese">Portuguese (pt)</option>
-          <option value="Romanian">Romanian (ro)</option>
-          <option value="Russian">Russian (ru)</option>
-          <option value="Serbian">Serbian (sr)</option>
-          <option value="Slovak">Slovak (sk)</option>
-          <option value="Slovenian">Slovenian (sl)</option>
-          <option value="Spanish">Spanish (es)</option>
-          <option value="Swahili">Swahili (sw)</option>
-          <option value="Swedish">Swedish (sv)</option>
-          <option value="Thai">Thai (th)</option>
-          <option value="Turkish">Turkish (tr)</option>
-          <option value="Ukrainian">Ukrainian (uk)</option>
-          <option value="Vietnamese">Vietnamese (vi)</option>
+          <option value="BG">Bulgarian</option>
+          <option value="CS">Czech</option>
+          <option value="DA">Danish</option>
+          <option value="DE">German</option>
+          <option value="EL">Greek</option>
+          <option value="EN-GB">English (British)</option>
+          <option value="EN-US">English (American)</option>
+          <option value="ES">Spanish</option>
+          <option value="ET">Estonian</option>
+          <option value="FI">Finnish</option>
+          <option value="FR">French</option>
+          <option value="HU">Hungarian</option>
+          <option value="ID" selected>Indonesian</option>
+          <option value="IT">Italian</option>
+          <option value="JA">Japanese</option>
+          <option value="KO">Korean</option>
+          <option value="LT">Lithuanian</option>
+          <option value="LV">Latvian</option>
+          <option value="NB">Norwegian</option>
+          <option value="NL">Dutch</option>
+          <option value="PL">Polish</option>
+          <option value="PT-BR">Portuguese (Brazilian)</option>
+          <option value="PT-PT">Portuguese (European)</option>
+          <option value="RO">Romanian</option>
+          <option value="RU">Russian</option>
+          <option value="SK">Slovak</option>
+          <option value="SL">Slovenian</option>
+          <option value="SV">Swedish</option>
+          <option value="TR">Turkish</option>
+          <option value="UK">Ukrainian</option>
+          <option value="ZH">Chinese (simplified)</option>
         </select>
       </div>
       <div class="run-section">

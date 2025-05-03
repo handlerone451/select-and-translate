@@ -559,15 +559,28 @@ function cropCanvas(
         return;
       }
 
+      // Ensure minimum dimensions for OCR processing
+      if (rectangle.width < 10 || rectangle.height < 10) {
+        reject(
+          new TypedError('SelectionBoxError', 'Selection area is too small for text recognition')
+        );
+        return;
+      }
+
       const croppedCanvas = document.createElement('canvas');
       croppedCanvas.width = rectangle.width;
       croppedCanvas.height = rectangle.height;
 
-      const ctx = croppedCanvas.getContext('2d');
-      if (!ctx)
+      const ctx = croppedCanvas.getContext('2d', { alpha: false });
+      if (!ctx) {
         return reject(
           new TypedError('DOMCanvasError', 'Canvas context not available')
         );
+      }
+
+      // Set white background to avoid transparency issues
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, rectangle.width, rectangle.height);
 
       ctx.drawImage(
         canvas,

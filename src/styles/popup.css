@@ -104,7 +104,6 @@ select:focus {
   filter: brightness(1.1);
 }
 
-
 .run-section {
   text-align: center;
   margin: 20px 0;
@@ -209,4 +208,66 @@ select:focus {
   .links-section {
     flex-direction: column;
   }
+}
+
+.api-keys-section {
+  margin-bottom: 16px;
+}
+
+.api-key-input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 30px;
+}
+
+.api-key-input input {
+  padding-right: 30px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.api-key-input input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.visibility-toggle {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  font-size: 14px;
+  color: var(--text-color);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.visibility-toggle:hover {
+  opacity: 1;
+}
+
+.api-key-input input.error {
+  border-color: #ff4444;
 }
