@@ -20,7 +20,7 @@ A browser extension that lets you select an area on your screen, extract text fr
 
 ### Chrome / Edge
 
-1. Download the latest release from [GitHub Releases](https://github.com/apirJS/select-and-translate/releases)
+1. Download the latest release from [GitHub Releases](https://github.com/handlerone451/select-and-translate/releases)
 2. Open Chrome/Edge and navigate to `chrome://extensions` or `edge://extensions`
 3. Enable "Developer mode" in the top right corner
 4. Drag and drop the downloaded .zip file into the browser window
@@ -48,10 +48,7 @@ A browser extension that lets you select an area on your screen, extract text fr
 
 ## Privacy
 
-- All text processing is done through a secure API
-- No personal data is collected or stored
-- No browsing history is tracked
-- The extension only requests permissions necessary for its core functionality
+- Use your own api key for translate from ocr.space and deepl, don't worry it's free
 
 ## Technical Details
 
